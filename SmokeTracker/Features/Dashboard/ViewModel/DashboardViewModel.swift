@@ -57,7 +57,10 @@ private extension DashboardViewModel {
             )
             
         case .timeSinceLastSession:
-            let timeSinceLast = sessions.last?.timestamp ?? Date()
+            let timeSinceLast = sessions.sorted { lhs, rhs in
+                rhs.timestamp > lhs.timestamp
+            }.last?.timestamp ?? Date()
+            
             let components = Calendar.current.dateComponents([.hour, .minute], from: timeSinceLast, to: Date())
             
             let hours = components.hour ?? 0
