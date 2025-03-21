@@ -15,16 +15,18 @@ struct DashboardListItem: View {
             VStack(alignment: .leading, spacing: 24) {
                 Text(viewModel.title)
                     .font(.title)
+                    .foregroundStyle(viewModel.style.foregroundColor)
                 
                 Text(viewModel.value)
                     .font(.title2)
+                    .foregroundStyle(viewModel.style.foregroundColor)
                     .bold()
             }
             
             Spacer()
         }
         .padding()
-        .background(viewModel.backgroundColor)
+        .background(viewModel.style.backgroundColor)
         .clipShape(.rect(cornerRadius: 16))
     }
 }

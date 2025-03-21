@@ -20,4 +20,8 @@ extension Color {
     var dashboardYellow: Color {
         Color("dashboardYellow")
     }
+    
+    var dashboardRed: Color {
+        Color("dashboardRed")
+    }
 }

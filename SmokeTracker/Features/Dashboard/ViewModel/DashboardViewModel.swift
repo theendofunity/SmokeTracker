@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 final class DashboardViewModel: ObservableObject {
     enum ModelType: CaseIterable {
@@ -51,12 +52,22 @@ private extension DashboardViewModel {
     }
     
     func makeModel(for type: ModelType, sessions: [SmokeSession]) -> DashboardModel? {
+        var style = DashboardModel.Style.green
+        
         switch type {
         case .numberOfSessions:
+            if let limit = Int(settingsService.sessionsLimit) {
+                if sessions.count > limit {
+                    style = .red
+                } else if sessions.count >= limit - 5 {
+                    style = .yellow
+                }
+            }
+            
             return DashboardModel(
                 title: "Today you\nsmoked",
                 value: "\(sessions.count) times",
-                backgroundColor: .dashboardYellow
+                style: style
             )
             
         case .timeSinceLastSession:
@@ -78,11 +89,21 @@ private extension DashboardViewModel {
             } else {
                 dateString = "\(hours) hours \(minutes) minutes ago"
             }
+            
+            if let limit = Int(settingsService.timeLimit) {
+                let value = minutes + hours * 60
+                
+                if value > limit {
+                    style = .red
+                } else if value >= limit - 10 {
+                    style = .yellow
+                }
+            }
                         
             return DashboardModel(
                 title: "Last time you\nsmoked",
                 value: dateString,
-                backgroundColor: .dashboardYellow
+                style: style
             )
             
         case .price:
@@ -97,7 +118,7 @@ private extension DashboardViewModel {
             return DashboardModel(
                 title: "You spent\ntoday",
                 value: "\(formattedValue) \(settingsService.currency)",
-                backgroundColor: .dashboardYellow
+                style: style
             )
         }
     }

@@ -9,14 +9,42 @@ import Foundation
 import SwiftUI
 
 final class DashboardModel: Identifiable {
+    enum Style {
+        case red
+        case yellow
+        case green
+        
+        var backgroundColor: Color {
+            switch self {
+            case .red:
+                return .dashboardRed
+            case .yellow:
+                return .dashboardYellow
+            case .green:
+                return .mainAccent
+            }
+        }
+        
+        var foregroundColor: Color {
+            switch self {
+            case .red:
+                return  .white
+            case .yellow:
+                return  .black
+            case .green:
+                return   .white
+            }
+        }
+    }
+    
     let title: String
     var value: String
-    let backgroundColor: Color
+    let style: Style
     
-    init(title: String, value: String, backgroundColor: Color = .dashboardYellow) {
+    init(title: String, value: String, style: Style = .green) {
         self.title = title
         self.value = value
-        self.backgroundColor = backgroundColor
+        self.style = style
     }
 }
 
