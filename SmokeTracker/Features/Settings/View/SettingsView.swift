@@ -60,6 +60,7 @@ struct SettingsView: View {
             .background(Color.mainBackground)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
+            .toolbarBackground(.mainBackground, for: .navigationBar)
             .alert("Delete all data?", isPresented: $isAlertPresented) {
                 Button("Delete", role: .destructive) {
                     viewModel.deleteData()

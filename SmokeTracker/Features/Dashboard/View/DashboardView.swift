@@ -18,10 +18,12 @@ struct DashboardView: View {
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
             }
+            .listStyle(.grouped)
             .background(Color.mainBackground)
             .scrollContentBackground(.hidden)
             .navigationTitle("Dashboard")
             .toolbarTitleDisplayMode(.large)
+            .toolbarBackground(.mainBackground, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {

@@ -10,18 +10,50 @@ import SwiftUI
 
 final class SettingsViewModel: ObservableObject {
     private let storageService = StorageService.shared
+    private let settingsService = UserSettingsStorage.shared
     
-    @AppStorage("price") var price: String = ""
-    @AppStorage("currency") var currency: String = ""
-    @AppStorage("sessionsLimit") var sessionsLimit: String = ""
-    @AppStorage("timeLimit") var timeLimit: String = ""
-    
-    func deleteData() {
-        price = ""
-        currency = ""
-        sessionsLimit = ""
-        timeLimit = ""
+    var price: String {
+        get {
+            settingsService.price
+        }
         
+        set {
+            settingsService.price = newValue
+        }
+    }
+    
+    var currency: String {
+        get {
+            settingsService.currency
+        }
+        
+        set {
+            settingsService.currency = newValue
+        }
+    }
+    
+    var sessionsLimit: String {
+        get {
+            settingsService.sessionsLimit
+        }
+        
+        set {
+            settingsService.sessionsLimit = newValue
+        }
+    }
+    
+    var timeLimit: String {
+        get {
+            settingsService.timeLimit
+        }
+        
+        set {
+            settingsService.timeLimit = newValue
+        }
+    }
+
+    func deleteData() {
         storageService.removeAll()
+        settingsService.deleteData()
     }
 }

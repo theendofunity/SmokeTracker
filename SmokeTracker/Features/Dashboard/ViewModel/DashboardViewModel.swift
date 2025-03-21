@@ -11,11 +11,14 @@ final class DashboardViewModel: ObservableObject {
     enum ModelType: CaseIterable {
         case timeSinceLastSession
         case numberOfSessions
+        case price
     }
     
     @Published var models: [DashboardModel] = []
     
     private let storageService = StorageService.shared
+    private let settingsService = UserSettingsStorage.shared
+
     private var timer: Timer?
     
     init () {
@@ -42,12 +45,12 @@ private extension DashboardViewModel {
             return []
         }
         
-        return ModelType.allCases.map {
+        return ModelType.allCases.compactMap {
             makeModel(for: $0, sessions: todaySessions)
         }
     }
     
-    func makeModel(for type: ModelType, sessions: [SmokeSession]) -> DashboardModel {
+    func makeModel(for type: ModelType, sessions: [SmokeSession]) -> DashboardModel? {
         switch type {
         case .numberOfSessions:
             return DashboardModel(
@@ -79,6 +82,21 @@ private extension DashboardViewModel {
             return DashboardModel(
                 title: "Last time you\nsmoked",
                 value: dateString,
+                backgroundColor: .dashboardYellow
+            )
+            
+        case .price:
+            let price = settingsService.price
+            guard !price.isEmpty else {
+                return nil
+            }
+            
+            let value = (Double(price) ?? 0) * Double(sessions.count) / 20
+            let formattedValue = String(format: "%.2f", value)
+            
+            return DashboardModel(
+                title: "You spent\ntoday",
+                value: "\(formattedValue) \(settingsService.currency)",
                 backgroundColor: .dashboardYellow
             )
         }
