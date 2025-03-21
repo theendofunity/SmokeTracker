@@ -13,7 +13,7 @@ final class StorageService: ObservableObject {
     
     private let context: ModelContext
     
-    @Published var data = [DailySessions]()
+    private var allSessions = [DailySessions]()
     
     private init() {
         let schema = Schema([DailySessions.self, SmokeSession.self])
@@ -28,9 +28,7 @@ final class StorageService: ObservableObject {
     }
     
     func trackSession() {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let dateKey = formatter.string(from: Date())
+        let dateKey = todayDateString()
         
         let fetchDescriptor = FetchDescriptor<DailySessions>(predicate: #Predicate { $0.dateString == dateKey })
 
@@ -45,16 +43,27 @@ final class StorageService: ObservableObject {
         
         let newSession = SmokeSession(timestamp: Date(), title: "")
         currentSession.sessions.append(newSession)
-//        context.insert(newSession)
         
         try? context.save()
     }
     
-    private func fetch() {
-        let descriptor = FetchDescriptor<DailySessions>()
-        data = (try? context.fetch(descriptor)) ?? []
+    func todaySessions() -> DailySessions? {
+        return allSessions.first { session in
+            session.dateString == todayDateString()
+        }
+    }
+}
+
+private extension StorageService {
+    func todayDateString() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
         
-        print(data.count, data.first?.sessions)
+        return formatter.string(from: Date())
     }
     
+    func fetch() {
+        let descriptor = FetchDescriptor<DailySessions>()
+        allSessions = (try? context.fetch(descriptor)) ?? []
+    }
 }
