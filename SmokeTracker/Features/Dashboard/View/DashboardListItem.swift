@@ -18,6 +18,7 @@ struct DashboardListItem: View {
                 
                 Text(viewModel.value)
                     .font(.title2)
+                    .bold()
             }
             
             Spacer()

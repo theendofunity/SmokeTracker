@@ -42,6 +42,9 @@ struct DashboardView: View {
                 }
             }
         }
+        .onAppear {
+            viewModel.update()
+        }
     }
 }
 

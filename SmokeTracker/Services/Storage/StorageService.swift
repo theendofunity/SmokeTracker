@@ -45,12 +45,24 @@ final class StorageService: ObservableObject {
         currentSession.sessions.append(newSession)
         
         try? context.save()
+        fetch()
     }
     
     func todaySessions() -> DailySessions? {
         return allSessions.first { session in
             session.dateString == todayDateString()
         }
+    }
+    
+    func removeAll() {
+        do {
+            try context.delete(model: DailySessions.self)
+            try context.delete(model: SmokeSession.self)
+            fetch()
+        } catch {
+            print(error)
+        }
+
     }
 }
 

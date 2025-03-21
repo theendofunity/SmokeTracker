@@ -28,15 +28,15 @@ final class DashboardViewModel: ObservableObject {
         update()
         runTimer()
     }
-}
-
-private extension DashboardViewModel {
+    
     func update() {
         let sessions = storageService.todaySessions()?.sessions ?? []
         
         models = makeModels(from: sessions)
     }
-    
+}
+
+private extension DashboardViewModel {
     func makeModels(from todaySessions: [SmokeSession]) -> [DashboardModel] {
         guard !todaySessions.isEmpty else {
             return []
@@ -88,7 +88,6 @@ private extension DashboardViewModel {
         timer?.invalidate()
         
         timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true , block: { [weak self] _ in
-            print("timer")
             self?.update()
         })
     }
