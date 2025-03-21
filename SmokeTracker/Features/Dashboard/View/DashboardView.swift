@@ -25,12 +25,19 @@ struct DashboardView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        
+                        viewModel.trackSession()
                     } label: {
                         Image(systemName: "plus")
                             .resizable()
                             .frame(width: 32, height: 32)
                             .tint(Color.mainAccent)
+                    }
+                }
+            }
+            .overlay {
+                if viewModel.models.isEmpty {
+                    EmptyDashboardView {
+                        viewModel.trackSession()
                     }
                 }
             }
