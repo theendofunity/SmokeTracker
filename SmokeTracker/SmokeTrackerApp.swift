@@ -17,6 +17,10 @@ struct SmokeTrackerApp: App {
                     DashboardView()
                 }
                 
+                Tab("Statistic", systemImage: "list.bullet.clipboard") {
+                    StatisticView()
+                }
+                
                 Tab("Settings", systemImage: "gearshape") {
                     SettingsView()
                 }
