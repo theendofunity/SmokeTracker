@@ -93,9 +93,9 @@ private extension DashboardViewModel {
             if let limit = Int(settingsService.timeLimit) {
                 let value = minutes + hours * 60
                 
-                if value > limit {
+                if value < limit - 10 {
                     style = .red
-                } else if value >= limit - 10 {
+                } else if value < limit {
                     style = .yellow
                 }
             }

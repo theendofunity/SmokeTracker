@@ -28,11 +28,11 @@ final class DashboardModel: Identifiable {
         var foregroundColor: Color {
             switch self {
             case .red:
-                return  .white
+                return .black
             case .yellow:
-                return  .black
+                return .black
             case .green:
-                return   .white
+                return  .white
             }
         }
     }

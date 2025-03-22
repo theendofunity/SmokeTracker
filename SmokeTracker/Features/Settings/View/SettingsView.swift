@@ -14,7 +14,7 @@ struct SettingsView: View {
     private func availableCurrencies() -> [String]{
         let locales = Locale.availableIdentifiers.map { Locale(identifier: $0) }
         let currencies = [""] + locales.compactMap { $0.currency?.identifier }
-        return Array(Set(currencies))
+        return Array(Set(currencies)).sorted()
     }
     
     var body: some View {
@@ -24,26 +24,29 @@ struct SettingsView: View {
                     VStack(alignment: .leading) {
                         Text("Price for package")
                         TextField("Enter price", text: $viewModel.price)
+                            .keyboardType(.decimalPad)
                     }
-                        .keyboardType(.decimalPad)
                     Picker("Currency", selection: $viewModel.currency) {
                         ForEach(availableCurrencies(), id: \.self) { currencyCode in
                             Text("\(currencyCode)")
                                 .tag(currencyCode)
                         }
                     }
+                    .pickerStyle(.menu)
                 }
                 
                 Section("Limits") {
                     VStack(alignment: .leading) {
                         Text("Sessions limit")
                         TextField("How many you want to smoke", text: $viewModel.sessionsLimit)
+                            .keyboardType(.numberPad)
                     }
                     
                     VStack(alignment: .leading) {
                         Text("Time limit")
                         HStack {
                             TextField("How often you want to smoke", text: $viewModel.timeLimit)
+                                .keyboardType(.numberPad)
                             Text("minutes")
                         }
                     }
@@ -61,14 +64,15 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(.mainBackground, for: .navigationBar)
+            .onTapGesture {
+                hideKeyboard()
+            }
             .alert("Delete all data?", isPresented: $isAlertPresented) {
                 Button("Delete", role: .destructive) {
                     viewModel.deleteData()
                 }
                 
-                Button("Cancel", role: .cancel) {
-                    
-                }
+                Button("Cancel", role: .cancel) {}
             }
         }
     }
