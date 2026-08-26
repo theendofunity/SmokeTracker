@@ -30,12 +30,12 @@ struct StatisticView: View {
                     .frame(height: 200)
                     .listRowSeparator(.hidden)
                 } else {
-                    Chart {
+                    Chart(viewModel.history) { model in
                         BarMark(
-                            x: .value("tessrt", 123),
-                            y: .value("tessrt", 321),
-                            width: .fixed(24)
+                            x: .value("Date", model.date),
+                            y: .value("Cigarettes", model.count)
                         )
+                        .foregroundStyle(Color.mainAccent)
                     }
                     .frame(height: 200)
 
