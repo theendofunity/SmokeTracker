@@ -21,20 +21,34 @@ struct StatisticView: View {
                 }
                 .pickerStyle(.segmented)
                 
-                Chart {
-                    BarMark(x: .value("tessrt", 123), y: .value("tessrt", 321))
-                }
-                .frame(height: 200)
-                
-                if viewModel.history.isEmpty {
-                    ContentUnavailableView(
-                        "No data",
-                        systemImage: "note.text",
-                        description: .init("Track sessions to have statistics")
-                    )
+                if viewModel.isLoading && viewModel.history.isEmpty {
+                    HStack {
+                        Spacer()
+                        ProgressView("Loading statistics…")
+                        Spacer()
+                    }
+                    .frame(height: 200)
+                    .listRowSeparator(.hidden)
                 } else {
-                    ForEach(viewModel.history) { model in
-                        HistoryCellView(model: model)
+                    Chart {
+                        BarMark(
+                            x: .value("tessrt", 123),
+                            y: .value("tessrt", 321),
+                            width: .fixed(24)
+                        )
+                    }
+                    .frame(height: 200)
+
+                    if viewModel.history.isEmpty {
+                        ContentUnavailableView(
+                            "No data",
+                            systemImage: "note.text",
+                            description: .init("Track sessions to have statistics")
+                        )
+                    } else {
+                        ForEach(viewModel.history) { model in
+                            HistoryCellView(model: model)
+                        }
                     }
                 }
             }
@@ -47,8 +61,8 @@ struct StatisticView: View {
             .overlay {
                
             }
-            .onAppear {
-                viewModel.onAppear()
+            .task {
+                await viewModel.load()
             }
         }
     }

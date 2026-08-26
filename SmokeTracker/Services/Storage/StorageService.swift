@@ -11,6 +11,7 @@ import SwiftData
 final class StorageService: ObservableObject {
     static var shared = StorageService()
     
+    private let container: ModelContainer
     private let context: ModelContext
     private let settingsService = UserSettingsStorage.shared
     
@@ -24,6 +25,7 @@ final class StorageService: ObservableObject {
             fatalError("Failed to initialize ModelContainer")
         }
         
+        self.container = container
         context = ModelContext(container)
         fetch()
     }
@@ -57,6 +59,17 @@ final class StorageService: ObservableObject {
         }
     }
     
+    func sessionTimestamps() async -> [Date] {
+        let container = container
+
+        return await Task.detached(priority: .utility) {
+            let context = ModelContext(container)
+            let descriptor = FetchDescriptor<SmokeSession>()
+            let sessions = (try? context.fetch(descriptor)) ?? []
+            return sessions.map(\.timestamp)
+        }.value
+    }
+
     func removeAll() {
         do {
             try context.delete(model: DailySessions.self)

@@ -7,6 +7,7 @@
 
 import Foundation
 
+@MainActor
 final class StatisticViewModel: ObservableObject {
     enum Period: String, CaseIterable {
         case week
@@ -14,46 +15,57 @@ final class StatisticViewModel: ObservableObject {
         case year
     }
     
-    private let storageService: StorageService
-    private let settingsService: UserSettingsStorage
+    private let storageService = StorageService.shared
+    private let settingsService = UserSettingsStorage.shared
     
     @Published var currentPeriod: Period = .week
-    @Published var history: [HistoryCellViewModel]
-    
-    init(
-        storageService: StorageService = .shared,
-        settingsService: UserSettingsStorage = .shared
-    ) {
-        self.storageService = storageService
-        self.settingsService = settingsService
-        history = Self.makeHistory(
-            from: storageService.allSessions,
-            dayEndMinutes: settingsService.dayEndMinutes
-        )
-    }
-    
-    func onAppear() {
-        history = Self.makeHistory(
-            from: storageService.allSessions,
-            dayEndMinutes: settingsService.dayEndMinutes
-        )
+    @Published private(set) var history: [HistoryCellViewModel] = []
+    @Published private(set) var isLoading = true
+
+    func load() async {
+        let dayEndMinutes = settingsService.dayEndMinutes
+        isLoading = history.isEmpty
+
+        try? await Task.sleep(for: .milliseconds(250))
+        guard !Task.isCancelled else { return }
+
+        let timestamps = await storageService.sessionTimestamps()
+        guard !Task.isCancelled else { return }
+
+        let summaries = await Task.detached(priority: .utility) {
+            Self.makeHistory(
+                from: timestamps,
+                dayEndMinutes: dayEndMinutes
+            )
+        }.value
+        guard !Task.isCancelled else { return }
+
+        history = summaries.map {
+            .init(date: $0.date, spent: 0.0, count: $0.count)
+        }
+        isLoading = false
     }
 }
 
 private extension StatisticViewModel {
-    static func makeHistory(
-        from sessions: [DailySessions],
+    struct HistorySummary: Sendable {
+        let date: String
+        let count: Int
+    }
+
+    nonisolated static func makeHistory(
+        from timestamps: [Date],
         dayEndMinutes: Int
-    ) -> [HistoryCellViewModel] {
-        let sessionsByDay = Dictionary(grouping: sessions.flatMap(\.sessions)) { session in
+    ) -> [HistorySummary] {
+        let sessionsByDay = Dictionary(grouping: timestamps) { timestamp in
             UserSettingsStorage.dateKey(
-                for: session.timestamp,
+                for: timestamp,
                 dayEndMinutes: dayEndMinutes
             )
         }
 
         return sessionsByDay.map { date, sessions in
-            .init(date: date, spent: 0.0, count: sessions.count)
+            .init(date: date, count: sessions.count)
         }
         .sorted { $0.date > $1.date }
     }
