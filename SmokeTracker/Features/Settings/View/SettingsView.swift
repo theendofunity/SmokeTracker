@@ -41,7 +41,7 @@ struct SettingsView: View {
                         TextField("How many you want to smoke", text: $viewModel.sessionsLimit)
                             .keyboardType(.numberPad)
                     }
-                    
+
                     VStack(alignment: .leading) {
                         Text("Time limit")
                         HStack {
@@ -50,6 +50,18 @@ struct SettingsView: View {
                             Text("minutes")
                         }
                     }
+                }
+
+                Section("Day") {
+                    DatePicker(
+                        "Day ends at",
+                        selection: $viewModel.dayEnd,
+                        displayedComponents: .hourAndMinute
+                    )
+
+                    Text("Sessions before this time count toward the previous day.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
                 
                 Section("Data") {

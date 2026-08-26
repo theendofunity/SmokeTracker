@@ -12,13 +12,14 @@ final class StorageService: ObservableObject {
     static var shared = StorageService()
     
     private let context: ModelContext
+    private let settingsService = UserSettingsStorage.shared
     
     private(set)var allSessions = [DailySessions]()
     
     private init() {
         let schema = Schema([DailySessions.self, SmokeSession.self])
         let container = try? ModelContainer(for: schema, migrationPlan: .none)
-        
+
         guard let container else {
             fatalError("Failed to initialize ModelContainer")
         }
@@ -27,8 +28,8 @@ final class StorageService: ObservableObject {
         fetch()
     }
     
-    func trackSession() {
-        let dateKey = todayDateString()
+    func trackSession(at timestamp: Date = Date()) {
+        let dateKey = settingsService.dateKey(for: timestamp)
         
         let fetchDescriptor = FetchDescriptor<DailySessions>(predicate: #Predicate { $0.dateString == dateKey })
 
@@ -41,16 +42,18 @@ final class StorageService: ObservableObject {
             context.insert(currentSession)
         }
         
-        let newSession = SmokeSession(timestamp: Date(), title: "")
+        let newSession = SmokeSession(timestamp: timestamp, title: "")
         currentSession.sessions.append(newSession)
         
         try? context.save()
         fetch()
     }
     
-    func todaySessions() -> DailySessions? {
-        return allSessions.first { session in
-            session.dateString == todayDateString()
+    func todaySessions() -> [SmokeSession] {
+        let dateKey = settingsService.dateKey()
+
+        return allSessions.flatMap(\.sessions).filter { session in
+            settingsService.dateKey(for: session.timestamp) == dateKey
         }
     }
     
@@ -67,13 +70,6 @@ final class StorageService: ObservableObject {
 }
 
 private extension StorageService {
-    func todayDateString() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        
-        return formatter.string(from: Date())
-    }
-    
     func fetch() {
         let descriptor = FetchDescriptor<DailySessions>()
         allSessions = (try? context.fetch(descriptor)) ?? []
