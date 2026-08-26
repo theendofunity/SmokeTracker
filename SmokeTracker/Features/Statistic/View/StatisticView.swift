@@ -13,32 +13,42 @@ struct StatisticView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack {
-                    Picker("Period", selection: $viewModel.currentPeriod) {
-                        ForEach(StatisticViewModel.Period.allCases, id: \.self) { period in
-                            Text(period.rawValue.capitalized)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    
-                    Chart {
-                        BarMark(x: .value("tessrt", 123), y: .value("tessrt", 321))
+            List {
+                Picker("Period", selection: $viewModel.currentPeriod) {
+                    ForEach(StatisticViewModel.Period.allCases, id: \.self) { period in
+                        Text(period.rawValue.capitalized)
                     }
                 }
-                .padding()
+                .pickerStyle(.segmented)
+                
+                Chart {
+                    BarMark(x: .value("tessrt", 123), y: .value("tessrt", 321))
+                }
+                .frame(height: 200)
+                
+                if viewModel.history.isEmpty {
+                    ContentUnavailableView(
+                        "No data",
+                        systemImage: "note.text",
+                        description: .init("Track sessions to have statistics")
+                    )
+                } else {
+                    ForEach(viewModel.history) { model in
+                        HistoryCellView(model: model)
+                    }
+                }
             }
+            .listStyle(.grouped)
             .scrollContentBackground(.hidden)
             .background(Color.mainBackground)
             .navigationTitle("Statistics")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(.mainBackground, for: .navigationBar)
             .overlay {
-                ContentUnavailableView(
-                    "No data",
-                    systemImage: "note.text",
-                    description: .init("Track sessions to have statistics")
-                )
+               
+            }
+            .onAppear {
+                viewModel.onAppear()
             }
         }
     }

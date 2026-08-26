@@ -13,7 +13,7 @@ final class StorageService: ObservableObject {
     
     private let context: ModelContext
     
-    private var allSessions = [DailySessions]()
+    private(set)var allSessions = [DailySessions]()
     
     private init() {
         let schema = Schema([DailySessions.self, SmokeSession.self])
