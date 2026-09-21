@@ -18,7 +18,14 @@ final class StatisticViewModel: ObservableObject {
     private let storageService = StorageService.shared
     private let settingsService = UserSettingsStorage.shared
     
-    @Published var currentPeriod: Period = .week
+    @Published var currentPeriod: Period = .week {
+        didSet {
+            Task {
+                await load()
+            }
+        }
+    }
+    
     @Published private(set) var history: [HistoryCellViewModel] = []
     @Published private(set) var isLoading = true
 
@@ -30,6 +37,25 @@ final class StatisticViewModel: ObservableObject {
         guard !Task.isCancelled else { return }
 
         let timestamps = await storageService.sessionTimestamps()
+            .filter { date in
+                var threshold: Date?
+                
+                switch currentPeriod {
+                case .week:
+                    threshold = Calendar.current.date(byAdding: .day, value: -7, to: Date())
+                case .month:
+                    threshold = Calendar.current.date(byAdding: .day, value: -30, to: Date())
+                case .year:
+                    threshold = Calendar.current.date(byAdding: .day, value: -365, to: Date())
+                }
+                
+                guard let threshold else {
+                    return true
+                }
+                
+                return date > threshold
+            }
+        
         guard !Task.isCancelled else { return }
 
         let summaries = await Task.detached(priority: .utility) {
