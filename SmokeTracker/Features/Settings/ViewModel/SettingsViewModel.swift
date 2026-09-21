@@ -11,12 +11,12 @@ import SwiftUI
 final class SettingsViewModel: ObservableObject {
     private let storageService = StorageService.shared
     private let settingsService = UserSettingsStorage.shared
-    
+
     var price: String {
         get {
             settingsService.price
         }
-        
+
         set {
             settingsService.price = newValue
         }
@@ -49,6 +49,23 @@ final class SettingsViewModel: ObservableObject {
         
         set {
             settingsService.timeLimit = newValue
+        }
+    }
+
+    var dayEnd: Date {
+        get {
+            let minutes = settingsService.dayEndMinutes
+            return Calendar.current.date(
+                bySettingHour: minutes / 60,
+                minute: minutes % 60,
+                second: 0,
+                of: Date()
+            ) ?? Date()
+        }
+
+        set {
+            let components = Calendar.current.dateComponents([.hour, .minute], from: newValue)
+            settingsService.dayEndMinutes = (components.hour ?? 0) * 60 + (components.minute ?? 0)
         }
     }
 

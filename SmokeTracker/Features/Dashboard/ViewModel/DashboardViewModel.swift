@@ -34,7 +34,7 @@ final class DashboardViewModel: ObservableObject {
     }
     
     func update() {
-        let sessions = storageService.todaySessions()?.sessions ?? []
+        let sessions = storageService.todaySessions()
         
         models = makeModels(from: sessions)
     }
