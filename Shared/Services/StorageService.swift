@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 import SwiftData
 
 final class StorageService: ObservableObject {
@@ -19,7 +20,12 @@ final class StorageService: ObservableObject {
     
     private init() {
         let schema = Schema([DailySessions.self, SmokeSession.self])
-        let container = try? ModelContainer(for: schema, migrationPlan: .none)
+        let container = try? ModelContainer(
+            for: schema,
+            configurations: .init(
+                groupContainer: .identifier(UserSettingsStorage.appGroupIdentifier),
+            )
+        )
 
         guard let container else {
             fatalError("Failed to initialize ModelContainer")
@@ -27,6 +33,7 @@ final class StorageService: ObservableObject {
         
         self.container = container
         context = ModelContext(container)
+        migrateLegacyDataIfNeeded(schema: schema)
         fetch()
     }
     
@@ -117,6 +124,53 @@ final class StorageService: ObservableObject {
 }
 
 private extension StorageService {
+    func migrateLegacyDataIfNeeded(schema: Schema) {
+        let migrationKey = "didMigrateLegacySwiftDataToAppGroup"
+        let defaults = UserSettingsStorage.appGroupDefaults
+
+        guard !defaults.bool(forKey: migrationKey) else {
+            return
+        }
+
+        let descriptor = FetchDescriptor<SmokeSession>()
+
+        if let existingSessions = try? context.fetch(descriptor), !existingSessions.isEmpty {
+            defaults.set(true, forKey: migrationKey)
+            return
+        }
+
+        guard
+            let legacyContainer = try? ModelContainer(for: schema),
+            let legacySessions = try? ModelContext(legacyContainer).fetch(descriptor),
+            !legacySessions.isEmpty
+        else {
+            return
+        }
+
+        let sessionsByDay = Dictionary(grouping: legacySessions) { session in
+            settingsService.dateKey(for: session.timestamp)
+        }
+
+        for (dateKey, sessions) in sessionsByDay {
+            let dailySessions = DailySessions(dateString: dateKey)
+            context.insert(dailySessions)
+
+            for session in sessions {
+                dailySessions.sessions.append(
+                    SmokeSession(timestamp: session.timestamp, title: session.title)
+                )
+            }
+        }
+
+        do {
+            try context.save()
+            defaults.set(true, forKey: migrationKey)
+        } catch {
+            context.rollback()
+            print(error)
+        }
+    }
+
     func fetch() {
         let descriptor = FetchDescriptor<DailySessions>()
         allSessions = (try? context.fetch(descriptor)) ?? []
