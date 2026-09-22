@@ -11,7 +11,7 @@ import SwiftData
 @Model
 final class DailySessions {
     @Attribute(.unique) var dateString: String  // "yyyy-MM-dd" format, unique
-   /* @Relationship(deleteRule: .cascade) */var sessions: [SmokeSession] = []
+    var sessions: [SmokeSession] = []
     
     init(dateString: String) {
         self.dateString = dateString
@@ -20,16 +20,13 @@ final class DailySessions {
 
 @Model
 final class SmokeSession {
-//    var parent: DailySessions?
     var timestamp: Date
     var title: String = ""
   
     init(
-//        parent: DailySessions? = nil,
         timestamp: Date,
         title: String
     ) {
-//        self.parent = parent
         self.timestamp = timestamp
         self.title = title
     }

@@ -63,8 +63,8 @@ struct StatisticView: View {
             }
             .navigationDestination(for: StatisticViewModel.Route.self) { route in
                 switch route {
-                case .details:
-                    DetailsView()
+                case let .details(date):
+                    HistoryDetailView(viewModel: .init(date: date))
                 }
             }
         }
@@ -73,11 +73,4 @@ struct StatisticView: View {
 
 #Preview {
     StatisticView()
-}
-
-struct DetailsView: View {
-    var body: some View {
-        Text("Details")
-            .navigationTitle("Details")
-    }
 }

@@ -59,6 +59,12 @@ final class StorageService: ObservableObject {
         }
     }
     
+    func sessions(for date: String) -> [SmokeSession] {
+        return allSessions.flatMap(\.sessions).filter { session in
+            settingsService.dateKey(for: session.timestamp) == date
+        }
+    }
+    
     func sessionTimestamps() async -> [Date] {
         let container = container
 
@@ -74,11 +80,39 @@ final class StorageService: ObservableObject {
         do {
             try context.delete(model: DailySessions.self)
             try context.delete(model: SmokeSession.self)
+            try context.save()
             fetch()
         } catch {
+            context.rollback()
+            fetch()
             print(error)
         }
 
+    }
+    
+    func remove(sessions: [SmokeSession]) throws {
+        do {
+            for session in sessions {
+                if let dailySessions = allSessions.first(where: { dailySessions in
+                    dailySessions.sessions.contains(where: { $0 === session })
+                }) {
+                    dailySessions.sessions.removeAll(where: { $0 === session })
+
+                    if dailySessions.sessions.isEmpty {
+                        context.delete(dailySessions)
+                    }
+                }
+
+                context.delete(session)
+            }
+
+            try context.save()
+            fetch()
+        } catch {
+            context.rollback()
+            fetch()
+            throw error
+        }
     }
 }
 

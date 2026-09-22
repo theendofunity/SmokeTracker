@@ -16,7 +16,12 @@ final class StatisticViewModel: ObservableObject {
     }
     
     enum Route: Hashable {
-        case details
+        case details(String)
+    }
+    
+    private struct HistorySummary: Sendable {
+        let date: String
+        let count: Int
     }
     
     private let storageService = StorageService.shared
@@ -64,42 +69,6 @@ final class StatisticViewModel: ObservableObject {
         
         guard !Task.isCancelled else { return }
 
-        let summaries = await Task.detached(priority: .utility) {
-            Self.makeHistory(
-                from: timestamps,
-                dayEndMinutes: dayEndMinutes
-            )
-        }.value
-        guard !Task.isCancelled else { return }
-
-        history = summaries
-            .map {
-                return HistoryCellViewModel(
-                    date: $0.date,
-                    spent: 0.0,
-                    count: $0.count,
-                    action: { [weak self] in
-                        self?.routes.append(.details)
-//                        self?.openHistoryDetails(
-//                            with: $0
-//                        )
-                    }
-                )
-            }
-        isLoading = false
-    }
-}
-
-private extension StatisticViewModel {
-    struct HistorySummary: Sendable {
-        let date: String
-        let count: Int
-    }
-
-    nonisolated static func makeHistory(
-        from timestamps: [Date],
-        dayEndMinutes: Int
-    ) -> [HistorySummary] {
         let sessionsByDay = Dictionary(grouping: timestamps) { timestamp in
             UserSettingsStorage.dateKey(
                 for: timestamp,
@@ -107,13 +76,25 @@ private extension StatisticViewModel {
             )
         }
 
-        return sessionsByDay.map { date, sessions in
-            .init(date: date, count: sessions.count)
+        let summaries = sessionsByDay.map { date, sessions in
+            HistorySummary(date: date, count: sessions.count)
         }
         .sorted { $0.date > $1.date }
-    }
-    
-    func openHistoryDetails(with: HistorySummary) {
-        routes.append(.details)
+        
+        guard !Task.isCancelled else { return }
+
+        history = summaries
+            .map {
+                let date = $0.date
+                return HistoryCellViewModel(
+                    date: date,
+                    spent: 0.0,
+                    count: $0.count,
+                    action: { [weak self] in
+                        self?.routes.append(.details(date))
+                    }
+                )
+            }
+        isLoading = false
     }
 }
