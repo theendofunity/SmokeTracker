@@ -75,23 +75,11 @@ private extension DashboardViewModel {
                 rhs.timestamp > lhs.timestamp
             }.last?.timestamp ?? Date()
             
-            let components = Calendar.current.dateComponents([.hour, .minute], from: timeSinceLast, to: Date())
-            
-            let hours = components.hour ?? 0
-            let minutes = components.minute ?? 0
-            
-            let dateString: String
-            
-            if hours == 0, minutes == 0 {
-                dateString = "Now"
-            } else if hours == 0 {
-                dateString = "\(minutes) minutes ago"
-            } else {
-                dateString = "\(hours) hours \(minutes) minutes ago"
-            }
+            let formattingResult = DateFormatting.timeSinceLast(timeSinceLast)
+            let dateString = formattingResult.dateString
             
             if let limit = Int(settingsService.timeLimit) {
-                let value = minutes + hours * 60
+                let value = formattingResult.timeValue
                 
                 if value < limit - 10 {
                     style = .red
