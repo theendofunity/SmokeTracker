@@ -16,6 +16,7 @@ final class UserSettingsStorage: ObservableObject {
         case sessionsLimit
         case timeLimit
         case dayEndMinutes
+        case timeSinceLast
     }
 
     static let shared = UserSettingsStorage()
@@ -33,6 +34,7 @@ final class UserSettingsStorage: ObservableObject {
     @AppStorage(StorageKey.sessionsLimit.rawValue, store: UserSettingsStorage.appGroupDefaults) var sessionsLimit: String = ""
     @AppStorage(StorageKey.timeLimit.rawValue, store: UserSettingsStorage.appGroupDefaults) var timeLimit: String = ""
     @AppStorage(StorageKey.dayEndMinutes.rawValue, store: UserSettingsStorage.appGroupDefaults) var dayEndMinutes: Int = 0
+    @AppStorage(StorageKey.timeSinceLast.rawValue, store: UserSettingsStorage.appGroupDefaults) var timeSinceLast: String = ""
 
     private init() {
         Self.migrateLegacyDefaults()
@@ -44,6 +46,7 @@ final class UserSettingsStorage: ObservableObject {
         sessionsLimit = ""
         timeLimit = ""
         dayEndMinutes = 0
+        timeSinceLast = ""
     }
 
     func dateKey(for date: Date = Date()) -> String {

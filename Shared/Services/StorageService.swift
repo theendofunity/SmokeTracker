@@ -54,8 +54,13 @@ final class StorageService: ObservableObject {
         let newSession = SmokeSession(timestamp: timestamp, title: "")
         currentSession.sessions.append(newSession)
         
-        try? context.save()
-        fetch()
+        do {
+            try context.save()
+            fetch()
+            settingsService.timeSinceLast = settingsService.dateKey(for: timestamp)
+        } catch {
+            print(error)
+        }
     }
     
     func todaySessions() -> [SmokeSession] {

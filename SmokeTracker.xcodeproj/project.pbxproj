@@ -55,6 +55,7 @@
 		BC2B95113062CF49008138A2 /* Exceptions for "Shared" folder in "SmokeTrackerWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Helpers/DateFormatting.swift,
 				Services/DailySessions.swift,
 				Services/StorageService.swift,
 				Services/UserSettingsStorage.swift,
@@ -110,9 +111,9 @@
 		BC21BFB02D8723A70046693A = {
 			isa = PBXGroup;
 			children = (
-				BC2B950F3062CF22008138A2 /* Shared */,
 				BC2B950C3062CE08008138A2 /* SmokeTrackerWidgetExtension.entitlements */,
 				BC21BFBB2D8723A70046693A /* SmokeTracker */,
+				BC2B950F3062CF22008138A2 /* Shared */,
 				BC2B94F33062A512008138A2 /* SmokeTrackerWidget */,
 				BC2B94EE3062A512008138A2 /* Frameworks */,
 				BC21BFBA2D8723A70046693A /* Products */,
