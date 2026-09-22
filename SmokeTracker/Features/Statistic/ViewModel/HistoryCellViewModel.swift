@@ -13,10 +13,13 @@ final class HistoryCellViewModel: Identifiable {
     let spent: Double
     let count: Int
     
-    init(date: String, spent: Double, count: Int) {
+    var action: EmptyClosure?
+    
+    init(date: String, spent: Double, count: Int, action: EmptyClosure?) {
         self.id = date
         self.date = date
         self.spent = spent
         self.count = count
+        self.action = action
     }
 }

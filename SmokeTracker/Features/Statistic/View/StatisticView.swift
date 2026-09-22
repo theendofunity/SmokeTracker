@@ -12,7 +12,7 @@ struct StatisticView: View {
     @StateObject private var viewModel = StatisticViewModel()
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $viewModel.routes) {
             List {
                 Picker("Period", selection: $viewModel.currentPeriod) {
                     ForEach(StatisticViewModel.Period.allCases, id: \.self) { period in
@@ -58,11 +58,14 @@ struct StatisticView: View {
             .navigationTitle("Statistics")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(.mainBackground, for: .navigationBar)
-            .overlay {
-               
-            }
             .task {
                 await viewModel.load()
+            }
+            .navigationDestination(for: StatisticViewModel.Route.self) { route in
+                switch route {
+                case .details:
+                    DetailsView()
+                }
             }
         }
     }
@@ -70,4 +73,11 @@ struct StatisticView: View {
 
 #Preview {
     StatisticView()
+}
+
+struct DetailsView: View {
+    var body: some View {
+        Text("Details")
+            .navigationTitle("Details")
+    }
 }

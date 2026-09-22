@@ -15,8 +15,14 @@ final class StatisticViewModel: ObservableObject {
         case year
     }
     
+    enum Route: Hashable {
+        case details
+    }
+    
     private let storageService = StorageService.shared
     private let settingsService = UserSettingsStorage.shared
+    
+    @Published var routes: [Route] = []
     
     @Published var currentPeriod: Period = .week {
         didSet {
@@ -66,9 +72,20 @@ final class StatisticViewModel: ObservableObject {
         }.value
         guard !Task.isCancelled else { return }
 
-        history = summaries.map {
-            .init(date: $0.date, spent: 0.0, count: $0.count)
-        }
+        history = summaries
+            .map {
+                return HistoryCellViewModel(
+                    date: $0.date,
+                    spent: 0.0,
+                    count: $0.count,
+                    action: { [weak self] in
+                        self?.routes.append(.details)
+//                        self?.openHistoryDetails(
+//                            with: $0
+//                        )
+                    }
+                )
+            }
         isLoading = false
     }
 }
@@ -94,5 +111,9 @@ private extension StatisticViewModel {
             .init(date: date, count: sessions.count)
         }
         .sorted { $0.date > $1.date }
+    }
+    
+    func openHistoryDetails(with: HistorySummary) {
+        routes.append(.details)
     }
 }
