@@ -73,13 +73,13 @@ final class StorageService: ObservableObject {
     func todaySessions() -> [SmokeSession] {
         let dateKey = settingsService.dateKey()
 
-        return allSessions.flatMap(\.sessions).filter { session in
+        return fetchSessions().filter { session in
             settingsService.dateKey(for: session.timestamp) == dateKey
         }
     }
     
     func sessions(for date: String) -> [SmokeSession] {
-        return allSessions.flatMap(\.sessions).filter { session in
+        return fetchSessions().filter { session in
             settingsService.dateKey(for: session.timestamp) == date
         }
     }
@@ -138,6 +138,13 @@ final class StorageService: ObservableObject {
 }
 
 private extension StorageService {
+    func fetchSessions() -> [SmokeSession] {
+        let readContext = ModelContext(container)
+        let descriptor = FetchDescriptor<SmokeSession>()
+
+        return (try? readContext.fetch(descriptor)) ?? []
+    }
+
     func syncTimeSinceLast() {
         settingsService.timeSinceLast = allSessions
             .flatMap(\.sessions)

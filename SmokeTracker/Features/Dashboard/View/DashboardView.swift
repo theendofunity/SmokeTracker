@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct DashboardView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var viewModel = DashboardViewModel()
     
     var body: some View {
@@ -45,6 +46,13 @@ struct DashboardView: View {
             }
         }
         .onAppear {
+            viewModel.update()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            guard newPhase == .active else {
+                return
+            }
+
             viewModel.update()
         }
     }
