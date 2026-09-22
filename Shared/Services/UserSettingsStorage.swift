@@ -34,7 +34,19 @@ final class UserSettingsStorage: ObservableObject {
     @AppStorage(StorageKey.sessionsLimit.rawValue, store: UserSettingsStorage.appGroupDefaults) var sessionsLimit: String = ""
     @AppStorage(StorageKey.timeLimit.rawValue, store: UserSettingsStorage.appGroupDefaults) var timeLimit: String = ""
     @AppStorage(StorageKey.dayEndMinutes.rawValue, store: UserSettingsStorage.appGroupDefaults) var dayEndMinutes: Int = 0
-    @AppStorage(StorageKey.timeSinceLast.rawValue, store: UserSettingsStorage.appGroupDefaults) var timeSinceLast: String = ""
+
+    var timeSinceLast: Date? {
+        get {
+            Self.appGroupDefaults.object(forKey: StorageKey.timeSinceLast.rawValue) as? Date
+        }
+        set {
+            if let newValue {
+                Self.appGroupDefaults.set(newValue, forKey: StorageKey.timeSinceLast.rawValue)
+            } else {
+                Self.appGroupDefaults.removeObject(forKey: StorageKey.timeSinceLast.rawValue)
+            }
+        }
+    }
 
     private init() {
         Self.migrateLegacyDefaults()
@@ -46,7 +58,7 @@ final class UserSettingsStorage: ObservableObject {
         sessionsLimit = ""
         timeLimit = ""
         dayEndMinutes = 0
-        timeSinceLast = ""
+        timeSinceLast = nil
     }
 
     func dateKey(for date: Date = Date()) -> String {

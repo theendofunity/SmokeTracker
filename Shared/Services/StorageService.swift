@@ -8,6 +8,11 @@
 import Foundation
 import Combine
 import SwiftData
+import WidgetKit
+
+enum SmokeTrackerWidgetConfiguration {
+    static let kind = "SmokeTrackerWidget"
+}
 
 final class StorageService: ObservableObject {
     static var shared = StorageService()
@@ -35,6 +40,7 @@ final class StorageService: ObservableObject {
         context = ModelContext(container)
         migrateLegacyDataIfNeeded(schema: schema)
         fetch()
+        syncTimeSinceLast()
     }
     
     func trackSession(at timestamp: Date = Date()) {
@@ -57,7 +63,8 @@ final class StorageService: ObservableObject {
         do {
             try context.save()
             fetch()
-            settingsService.timeSinceLast = settingsService.dateKey(for: timestamp)
+            settingsService.timeSinceLast = timestamp
+            reloadWidget()
         } catch {
             print(error)
         }
@@ -94,6 +101,7 @@ final class StorageService: ObservableObject {
             try context.delete(model: SmokeSession.self)
             try context.save()
             fetch()
+            syncTimeSinceLast()
         } catch {
             context.rollback()
             fetch()
@@ -120,6 +128,7 @@ final class StorageService: ObservableObject {
 
             try context.save()
             fetch()
+            syncTimeSinceLast()
         } catch {
             context.rollback()
             fetch()
@@ -129,6 +138,19 @@ final class StorageService: ObservableObject {
 }
 
 private extension StorageService {
+    func syncTimeSinceLast() {
+        settingsService.timeSinceLast = allSessions
+            .flatMap(\.sessions)
+            .map(\.timestamp)
+            .max()
+
+        reloadWidget()
+    }
+
+    func reloadWidget() {
+        WidgetCenter.shared.reloadTimelines(ofKind: SmokeTrackerWidgetConfiguration.kind)
+    }
+
     func migrateLegacyDataIfNeeded(schema: Schema) {
         let migrationKey = "didMigrateLegacySwiftDataToAppGroup"
         let defaults = UserSettingsStorage.appGroupDefaults

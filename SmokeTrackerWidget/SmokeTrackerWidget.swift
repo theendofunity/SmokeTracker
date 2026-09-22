@@ -9,38 +9,45 @@ import WidgetKit
 import SwiftUI
 
 struct Provider: TimelineProvider {
-    func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), emoji: "😀")
+    private let userStorage = UserSettingsStorage.shared
+
+    func placeholder(in context: Context) -> WidgetEntry {
+        WidgetEntry(
+            date: .now,
+            lastSessionTimestamp: nil
+        )
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date(), emoji: "😀")
-        completion(entry)
+    func getSnapshot(in context: Context, completion: @escaping (WidgetEntry) -> ()) {
+        completion(context.isPreview ? placeholder(in: context) : makeEntry())
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        var entries: [SimpleEntry] = []
+        let now = Date.now
+        let startOfCurrentMinute = Calendar.current.dateInterval(of: .minute, for: now)?.start ?? now
+        let lastSessionTimestamp = userStorage.timeSinceLast
+        let entries = (0...60).map { minuteOffset in
+            let date = minuteOffset == 0
+                ? now
+                : startOfCurrentMinute.addingTimeInterval(TimeInterval(minuteOffset * 60))
 
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
-        let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, emoji: "😀")
-            entries.append(entry)
+            return WidgetEntry(
+                date: date,
+                lastSessionTimestamp: lastSessionTimestamp
+            )
         }
 
-        let timeline = Timeline(entries: entries, policy: .atEnd)
-        completion(timeline)
+        completion(Timeline(entries: entries, policy: .atEnd))
     }
 
-//    func relevances() async -> WidgetRelevances<Void> {
-//        // Generate a list containing the contexts this widget is relevant in.
-//    }
+    private func makeEntry() -> WidgetEntry {
+        WidgetEntry(date: .now, lastSessionTimestamp: userStorage.timeSinceLast)
+    }
 }
 
-struct SimpleEntry: TimelineEntry {
+struct WidgetEntry: TimelineEntry {
     let date: Date
-    let emoji: String
+    let lastSessionTimestamp: Date?
 }
 
 struct SmokeTrackerWidgetEntryView : View {
@@ -50,7 +57,15 @@ struct SmokeTrackerWidgetEntryView : View {
         VStack(alignment: .leading) {
             Text("Last session")
             
-            Text(entry.date, style: .timer)
+            if let lastSession = entry.lastSessionTimestamp {
+                Text(elapsedTime(since: lastSession))
+                    .font(.title2.bold())
+                    .monospacedDigit()
+                    .minimumScaleFactor(0.7)
+            } else {
+                Text("No sessions")
+                    .foregroundStyle(.secondary)
+            }
             
             Spacer()
             
@@ -65,10 +80,18 @@ struct SmokeTrackerWidgetEntryView : View {
             }
         }
     }
+
+    private func elapsedTime(since lastSession: Date) -> String {
+        let totalMinutes = max(0, Int(entry.date.timeIntervalSince(lastSession) / 60))
+        let hours = totalMinutes / 60
+        let minutes = totalMinutes % 60
+
+        return String(format: "%02d:%02d", hours, minutes)
+    }
 }
 
 struct SmokeTrackerWidget: Widget {
-    let kind: String = "SmokeTrackerWidget"
+    let kind = SmokeTrackerWidgetConfiguration.kind
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
@@ -81,14 +104,14 @@ struct SmokeTrackerWidget: Widget {
                     .background()
             }
         }
-        .configurationDisplayName("My Widget")
-        .description("This is an example widget.")
     }
 }
 
 #Preview(as: .systemSmall) {
     SmokeTrackerWidget()
 } timeline: {
-    SimpleEntry(date: .now, emoji: "😀")
-    SimpleEntry(date: .now, emoji: "🤩")
+    WidgetEntry(
+        date: .now,
+        lastSessionTimestamp: nil
+    )
 }
