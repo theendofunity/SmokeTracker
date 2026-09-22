@@ -7,6 +7,7 @@
 
 import WidgetKit
 import SwiftUI
+import AppIntents
 
 struct Provider: TimelineProvider {
     private let userStorage = UserSettingsStorage.shared
@@ -72,8 +73,8 @@ struct SmokeTrackerWidgetEntryView : View {
             HStack {
                 Spacer()
                 
-                Button("Track", systemImage: "plus.circle") {
-                    
+                Button(intent: TrackSessionIntent()) {
+                    Label("Track", systemImage: "plus.circle")
                 }
                 
                 Spacer()
