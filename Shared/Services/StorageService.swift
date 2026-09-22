@@ -18,7 +18,7 @@ final class StorageService: ObservableObject {
     static var shared = StorageService()
     
     private let container: ModelContainer
-    private let context: ModelContext
+    private var context: ModelContext
     private let settingsService = UserSettingsStorage.shared
     
     private(set)var allSessions = [DailySessions]()
@@ -44,6 +44,8 @@ final class StorageService: ObservableObject {
     }
     
     func trackSession(at timestamp: Date = Date()) {
+        refreshFromStore()
+
         let dateKey = settingsService.dateKey(for: timestamp)
         
         let fetchDescriptor = FetchDescriptor<DailySessions>(predicate: #Predicate { $0.dateString == dateKey })
@@ -79,7 +81,9 @@ final class StorageService: ObservableObject {
     }
     
     func sessions(for date: String) -> [SmokeSession] {
-        return fetchSessions().filter { session in
+        refreshFromStore()
+
+        return allSessions.flatMap(\.sessions).filter { session in
             settingsService.dateKey(for: session.timestamp) == date
         }
     }
@@ -138,6 +142,11 @@ final class StorageService: ObservableObject {
 }
 
 private extension StorageService {
+    func refreshFromStore() {
+        context = ModelContext(container)
+        fetch()
+    }
+
     func fetchSessions() -> [SmokeSession] {
         let readContext = ModelContext(container)
         let descriptor = FetchDescriptor<SmokeSession>()

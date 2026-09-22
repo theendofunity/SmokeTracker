@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct HistoryDetailView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject var viewModel: HistoryDetailViewModel
     
     var body: some View {
@@ -21,6 +22,13 @@ struct HistoryDetailView: View {
         }
         .navigationTitle(viewModel.date)
         .onAppear {
+            viewModel.onAppear()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            guard newPhase == .active else {
+                return
+            }
+
             viewModel.onAppear()
         }
     }

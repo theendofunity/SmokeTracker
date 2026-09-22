@@ -9,6 +9,7 @@ import SwiftUI
 import Charts
 
 struct StatisticView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var viewModel = StatisticViewModel()
     
     var body: some View {
@@ -58,7 +59,11 @@ struct StatisticView: View {
             .navigationTitle("Statistics")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(.mainBackground, for: .navigationBar)
-            .task {
+            .task(id: scenePhase) {
+                guard scenePhase == .active else {
+                    return
+                }
+
                 await viewModel.load()
             }
             .navigationDestination(for: StatisticViewModel.Route.self) { route in
