@@ -40,7 +40,7 @@ final class StorageService: ObservableObject {
         context = ModelContext(container)
         migrateLegacyDataIfNeeded(schema: schema)
         fetch()
-        syncTimeSinceLast()
+        syncWidgetData()
     }
     
     func trackSession(at timestamp: Date = Date()) {
@@ -65,8 +65,7 @@ final class StorageService: ObservableObject {
         do {
             try context.save()
             fetch()
-            settingsService.timeSinceLast = timestamp
-            reloadWidget()
+            syncWidgetData()
         } catch {
             print(error)
         }
@@ -105,7 +104,7 @@ final class StorageService: ObservableObject {
             try context.delete(model: SmokeSession.self)
             try context.save()
             fetch()
-            syncTimeSinceLast()
+            syncWidgetData()
         } catch {
             context.rollback()
             fetch()
@@ -132,7 +131,7 @@ final class StorageService: ObservableObject {
 
             try context.save()
             fetch()
-            syncTimeSinceLast()
+            syncWidgetData()
         } catch {
             context.rollback()
             fetch()
@@ -154,11 +153,15 @@ private extension StorageService {
         return (try? readContext.fetch(descriptor)) ?? []
     }
 
-    func syncTimeSinceLast() {
-        settingsService.timeSinceLast = allSessions
-            .flatMap(\.sessions)
-            .map(\.timestamp)
-            .max()
+    func syncWidgetData(at date: Date = Date()) {
+        let sessions = allSessions.flatMap(\.sessions)
+        let dateKey = settingsService.dateKey(for: date)
+
+        settingsService.timeSinceLast = sessions.map(\.timestamp).max()
+        settingsService.todaySessions = sessions.filter {
+            settingsService.dateKey(for: $0.timestamp) == dateKey
+        }.count
+        settingsService.todaySessionsDateKey = dateKey
 
         reloadWidget()
     }

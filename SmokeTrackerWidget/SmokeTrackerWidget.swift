@@ -15,7 +15,8 @@ struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> WidgetEntry {
         WidgetEntry(
             date: .now,
-            lastSessionTimestamp: nil
+            lastSessionTimestamp: nil,
+            numberOfSessions: 0
         )
     }
 
@@ -27,6 +28,8 @@ struct Provider: TimelineProvider {
         let now = Date.now
         let startOfCurrentMinute = Calendar.current.dateInterval(of: .minute, for: now)?.start ?? now
         let lastSessionTimestamp = userStorage.timeSinceLast
+        let storedSessionsCount = userStorage.todaySessions
+        let sessionsDateKey = userStorage.todaySessionsDateKey
         let entries = (0...60).map { minuteOffset in
             let date = minuteOffset == 0
                 ? now
@@ -34,7 +37,10 @@ struct Provider: TimelineProvider {
 
             return WidgetEntry(
                 date: date,
-                lastSessionTimestamp: lastSessionTimestamp
+                lastSessionTimestamp: lastSessionTimestamp,
+                numberOfSessions: userStorage.dateKey(for: date) == sessionsDateKey
+                    ? storedSessionsCount
+                    : 0
             )
         }
 
@@ -42,13 +48,22 @@ struct Provider: TimelineProvider {
     }
 
     private func makeEntry() -> WidgetEntry {
-        WidgetEntry(date: .now, lastSessionTimestamp: userStorage.timeSinceLast)
+        let date = Date.now
+
+        return WidgetEntry(
+            date: date,
+            lastSessionTimestamp: userStorage.timeSinceLast,
+            numberOfSessions: userStorage.dateKey(for: date) == userStorage.todaySessionsDateKey
+                ? userStorage.todaySessions
+                : 0
+        )
     }
 }
 
 struct WidgetEntry: TimelineEntry {
     let date: Date
     let lastSessionTimestamp: Date?
+    let numberOfSessions: Int
 }
 
 struct SmokeTrackerWidgetEntryView : View {
@@ -57,16 +72,26 @@ struct SmokeTrackerWidgetEntryView : View {
     var body: some View {
         VStack(alignment: .leading) {
             Text("Last session")
-            
+
             if let lastSession = entry.lastSessionTimestamp {
-                Text(elapsedTime(since: lastSession))
-                    .font(.title2.bold())
-                    .monospacedDigit()
-                    .minimumScaleFactor(0.7)
+                HStack {
+                    Text(elapsedTime(since: lastSession))
+                        .font(.title2.bold())
+                        .monospacedDigit()
+                        .minimumScaleFactor(0.7)
+                    
+                    Text("ago")
+                }
             } else {
                 Text("No sessions")
                     .foregroundStyle(.secondary)
             }
+            
+            Text("Today")
+            Text("\(entry.numberOfSessions) times")
+                .font(.title2.bold())
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
             
             Spacer()
             
@@ -75,6 +100,7 @@ struct SmokeTrackerWidgetEntryView : View {
                 
                 Button(intent: TrackSessionIntent()) {
                     Label("Track", systemImage: "plus.circle")
+                        .frame(maxWidth: .infinity)
                 }
                 
                 Spacer()
@@ -105,6 +131,7 @@ struct SmokeTrackerWidget: Widget {
                     .background()
             }
         }
+        .supportedFamilies([.systemSmall])
     }
 }
 
@@ -113,6 +140,7 @@ struct SmokeTrackerWidget: Widget {
 } timeline: {
     WidgetEntry(
         date: .now,
-        lastSessionTimestamp: nil
+        lastSessionTimestamp: nil,
+        numberOfSessions: 0
     )
 }
